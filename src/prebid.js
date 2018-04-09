@@ -272,13 +272,12 @@ $$PREBID_GLOBAL$$.allBidsAvailable = function () {
  * @param  {string} id bid id to locate the ad
  * @alias module:pbjs.renderAd
  */
-$$PREBID_GLOBAL$$.renderAd = function (doc, id) {
+$$PREBID_GLOBAL$$.renderAd = function (doc, bid) {
+  const id = bid.adId;
   utils.logInfo('Invoking $$PREBID_GLOBAL$$.renderAd', arguments);
-  utils.logMessage('Calling renderAd with adId :' + id);
+  utils.logMessage('Calling renderAd with bid :' + id);
   if (doc && id) {
     try {
-      // lookup ad by ad Id
-      const bid = $$PREBID_GLOBAL$$._bidsReceived.find(bid => bid.adId === id);
       if (bid) {
         // replace macros according to openRTB with price paid = bid.cpm
         bid.ad = utils.replaceAuctionPrice(bid.ad, bid.cpm);
