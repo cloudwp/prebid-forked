@@ -291,10 +291,13 @@ function emitAdRenderFail({ reason, message, bid, id }) {
  * @param  {HTMLDocument} doc document
  * @param  {string} id bid id to locate the ad
  * @alias module:pbjs.renderAd
+ * @return {boolean} success
  */
 $$PREBID_GLOBAL$$.renderAd = function (doc, id) {
   utils.logInfo('Invoking $$PREBID_GLOBAL$$.renderAd', arguments);
   utils.logMessage('Calling renderAd with adId :' + id);
+
+  let success = false;
 
   if (doc && id) {
     try {
@@ -316,11 +319,13 @@ $$PREBID_GLOBAL$$.renderAd = function (doc, id) {
         const creativeComment = document.createComment(`Creative ${bid.creativeId} served by ${bid.bidder} Prebid.js Header Bidding`);
         utils.insertElement(creativeComment, doc, 'body');
 
+        success = true;
         if (isRendererRequired(renderer)) {
           executeRenderer(renderer, bid);
         } else if ((doc === document && !utils.inIframe()) || mediaType === 'video') {
           const message = `Error trying to write ad. Ad render call ad id ${id} was prevented from writing to the main document.`;
           emitAdRenderFail({ reason: PREVENT_WRITING_ON_MAIN_DOCUMENT, message, bid, id });
+          success = false;
         } else if (ad) {
           // will check if browser is firefox and below version 67, if so execute special doc.open()
           // for details see: https://github.com/prebid/Prebid.js/pull/3524
@@ -350,19 +355,25 @@ $$PREBID_GLOBAL$$.renderAd = function (doc, id) {
         } else {
           const message = `Error trying to write ad. No ad for bid response id: ${id}`;
           emitAdRenderFail({ reason: NO_AD, message, bid, id });
+          success = false;
         }
       } else {
         const message = `Error trying to write ad. Cannot find ad by given id : ${id}`;
         emitAdRenderFail({ reason: CANNOT_FIND_AD, message, id });
+        success = false;
       }
     } catch (e) {
       const message = `Error trying to write ad Id :${id} to the page:${e.message}`;
       emitAdRenderFail({ reason: EXCEPTION, message, id });
+      success = false;
     }
   } else {
     const message = `Error trying to write ad Id :${id} to the page. Missing document or adId`;
     emitAdRenderFail({ reason: MISSING_DOC_OR_ADID, message, id });
+    success = false;
   }
+
+  return success;
 };
 
 /**
